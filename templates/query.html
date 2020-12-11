@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+{% extends "template.html" %}
+{% block content %}
+<head> 
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title></title>
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+  
+  var rowCount = 0; 
+  
+    
+    function cloneRow() {
+      /*
+      var row = document.getElementById("row1"); // find row to copy
+      var table = document.getElementById("tableToModify"); // find table to append to
+      var clone = row.cloneNode(true); // copy children too
+      var rowCount = table.rows.length;
+      clone.id = "row" + rowCount; // change id or other attributes/contents
+      //clone.getElementById("dropDown1").setAttribute("id", "dropDown1" + rowCount.toString());
+      clone.find("#dropDown1").attr("id","dropDown1"+rowCount);
+      table.appendChild(clone); // add new row to end of table
+      */
+      
+      var table = document.getElementById("tableToModify");
+  
+  		//var rowCount = table.rows.length;
+  		rowCount++;
+  		var row = table.insertRow(rowCount);
+  
+  		var colCount = table.rows[0].cells.length;
+      
+      var len1 = 0;
+  		var len2 = 0;
+  		var len3 = 0;
+  			
+  		for(var i=0; i<colCount; i++) {
+  
+  			var newcell	= row.insertCell(i);
+  			newcell.innerHTML = table.rows[0].cells[i].innerHTML;
+  			len1 = newcell.childElementCount;
+  			for(var j=0; j < len1; j++) {
+  			  try {
+  			    if (newcell.children[j].id.length > 0) {
+  			      newcell.children[j].id += rowCount.toString();
+  			    }
+  			  }
+  			  catch(e) {
+  			    alert(e);
+  			    //continue;
+  			  }
+  			  len2 = newcell.children[j].childElementCount;
+  			  for(var k=0; k < len2; k++) {
+  			    try {
+  			      if (newcell.children[j].children[k].id.length > 0) {
+    			      newcell.children[j].children[k].id += rowCount.toString();
+    			
+  			      }
+    			  }
+    			  catch(e) {
+    			    alert(e);
+    			    //continue;
+    			  }
+    			  len3 = newcell.children[j].children[k].childElementCount;
+    			  //alert(len3);
+    			  for(var l=0; l < len3; l++) {
+    			    try {
+    			      if(newcell.children[j].children[k].children[l].id.length > 0) {
+    			        newcell.children[j].children[k].children[l].id += rowCount.toString();
+    			      }
+      			  }
+      			  catch(e) {
+      			    alert(e);
+      			    //continue;
+      			  }
+    			  }
+  			  }
+  			}
+  			switch(newcell.childNodes[0].type) {
+  				case "text":
+  						newcell.childNodes[0].value = "";
+  						break;
+  				case "checkbox":
+  						newcell.childNodes[0].checked = false;
+  						break;
+  				case "select-one":
+  						newcell.childNodes[0].selectedIndex = 0;
+  						break;
+  			}
+  			//newcell.childNodes[0].id = table.rows[0].cells[i].id + rowCount;
+  			//alert(newcell.childNodes[0].id)
+  		}
+
+    }
+
+
+    function phenotype(){
+      for(var i = 0; i <= rowCount; i++) {
+        var val = i.toString();
+        if(i == 0) {
+          val = '';
+        }
+        var a = document.getElementById("dropDown1" + val);        
+        if(a.value == "Gender")  { 
+            document.getElementById("Gender" + val).setAttribute("style","display:inline");
+            document.getElementById("G" + val).removeAttribute("disabled");
+            document.getElementById("Population" + val).setAttribute("style","display:none");
+        }
+        else if(a.value == "Population") {
+            document.getElementById("G" + val).setAttribute("disabled", "disabled");
+            document.getElementById("Gender" + val).setAttribute("style","display:none");
+            document.getElementById("Population" + val).setAttribute("style","display:inline");
+        }
+        else {
+            document.getElementById("Gender" + val).setAttribute("style","display:inline");
+            document.getElementById("G" + val).removeAttribute("disabled");
+            document.getElementById("Population" + val).setAttribute("style","display:inline");
+        }
+      }
+
+    }
+    
+    function fun(){
+      //alert(rowCount);
+      for(var i = 0; i <= rowCount; i++) {
+        
+        var val = i.toString();
+        if(i == 0) {
+          val = '';
+        }
+        
+        var a = document.getElementById("dropDown2" + val);         
+
+        if(a.value == "MAF")          
+            document.getElementById("Fun" + val).setAttribute("style","display:none");
+        else
+            document.getElementById("Fun" + val).setAttribute("style","display:inline");
+      }
+    }
+    
+    function checkForTheCondition(){
+      var i = 0;
+      //alert(rowCount);  
+      for(var j = 0; j <= rowCount; j++) {
+        var val = j.toString();
+        if(j == 0) {
+          val = '';
+        }
+        var check1 = false;
+  
+        if (document.getElementById("dropDown1" + val).value == "Gender") {
+          for (i = 1; i < 27; i++) {
+            document.getElementById("pop" + i.toString() + val).checked = false;
+          }
+          check1 = true;        
+        }
+        else {
+          for (i = 1; i < 27; i++) {
+            if (document.getElementById("pop" + i.toString() + val).checked) {
+              check1 = true;
+              break;
+            }
+          }
+        }
+        if(!check1) {
+          //document.getElementById("Unchecked1").setAttribute("style","display:inline");
+          alert("Must check at least one population box");
+        }
+          
+        var check2 = false;
+        if (document.getElementById("dropDown2" + val).value == "MAF") {
+          for (i = 1; i < 4; i++) {
+            document.getElementById("gen" + i.toString() + val).checked = false;
+          }
+          check2 = true;
+        }
+        else {
+          for (i = 1; i < 4; i++) {
+            if (document.getElementById("gen" + i.toString() + val).checked) {
+              check2 = true;
+              break;
+            }
+          }
+        }
+        if(!check2) {
+          alert("Must check at least one genotype box");
+          //document.getElementById("Unchecked2").setAttribute("style","display:inline");
+        }
+        var possiblenum = document.getElementById("num" + val).value;
+        var check3 = !isNaN(possiblenum) && possiblenum > 0;
+        
+        if(!check3) {
+          alert("Must enter a valid number");
+          //document.getElementById("Unchecked2").setAttribute("style","display:inline");
+        }
+        if(!check1 || !check2 || !check3) {
+          return false;
+        }
+        /*
+        else {
+          var form = document.getElementById("form"); 
+          //var row = document.getElementById("rowToClone"); // find row to copy
+          var table = document.getElementById("tableToModify"); 
+          var tableHTML = table.innerHTML;
+          //form.innerHTML = tableHTML;
+          document.form.submit();
+        }
+        
+        document.form.submit();
+        */
+      }
+      document.getElementById("All").setAttribute("style","display:none");
+      document.getElementById("Loading").setAttribute("style","display:inline");
+      document.form.submit();
+      /*
+      var a = document.getElementById("dropDown2");
+      if(a.value != "MAF") {
+        if ((document.getElementById('Gen1').checked) || (document.getElementById('Gen2').checked) (document.getElementById('Gen3').checked)) {
+          document.getElementById("FunErr").setAttribute("style","display:none");
+        }
+        else {
+          document.getElementById("FunErr").setAttribute("style","display:inline");
+          return false;
+        }
+      }
+      if(a.value != "Gender") {
+        a = document.getElementById("dropDown1");
+      }
+      */
+    }
+    function reset() {
+      document.getElementById("Loading").setAttribute("style","display:none");
+      document.getElementById("All").setAttribute("style","display:inline");
+      phenotype();
+      fun();
+    }
+  
+
+</script>
+</head>
+<body onload="reset()">
+    <h2 class="text-muted">Query the 1000 Genomes Project Phase 3</h2>
+    <form id ="form" name="form" method="GET" action="/query">
+      <div id="Loading" style="display:none">
+        <p>Your query will be ready in a few minutes. Once it is done, the URL to download it will appear here.</p>
+      </div>
+      <div id = "All" style="display:inline">
+        <table>
+          <thead>
+            <p></p><p></p><p></p><p></p>
+              <select name="file" id="fileDD" style="width: 75px;">
+                  <option>ch1</option>
+                  <option>ch2</option>
+                  <option>ch3</option>
+                  <option>ch4</option>
+                  <option>ch5</option>
+                  <option>ch6</option>
+                  <option>ch7</option>
+                  <option>ch8</option>
+                  <option>ch9</option>
+                  <option>ch10</option>
+                  <option>ch11</option>
+                  <option>ch12</option>
+                  <option>ch13</option>
+                  <option>ch14</option>
+                  <option>ch15</option>
+                  <option>ch16</option>
+                  <option>ch17</option>
+                  <option>ch18</option>
+                  <option>ch19</option>
+                  <option>ch20</option>
+                  <option>ch21</option>
+                  <option>ch22</option>
+                </select> &ensp;
+          </thead>
+          <tbody id="tableToModify">
+            <div id="input1" style="margin-bottom:4px;" class="clonedInput">
+            <tr id="row1"> 
+            <td>Phenotype: &ensp;</td>
+              <td>
+                <select name="-p" onchange="phenotype()" id="dropDown1">
+                  <option>Gender</option>
+                  <option>Population</option>
+                  <option>Both</option>
+                </select> &ensp; </td>
+              <td>
+              <p>
+              <div id="Gender" style="display:inline">
+                <select id="G" name=" ">
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </div>
+              </p>
+              <div id="Population" style="display:none">
+                <div style="float: left;">
+                <input type="checkbox" id="pop1" name=" " value="CHB"> CHB<br>
+                <input type="checkbox" id="pop2" name=" " value="JPT"> JPT<br>
+                <input type="checkbox" id="pop3" name=" " value="CHS"> CHS<br>
+                <input type="checkbox" id="pop4" name=" " value="CDX"> CDX<br>
+                <input type="checkbox" id="pop5" name=" " value="KHV"> KHV<br>
+                <input type="checkbox" id="pop6" name=" " value="CEU"> CEU<br>
+                <input type="checkbox" id="pop7" name=" " value="TSI"> TSI<br>
+                <input type="checkbox" id="pop8" name=" " value="FIN"> FIN<br>
+                <input type="checkbox" id="pop9" name=" " value="GBR"> GBR<br>
+                <input type="checkbox" id="pop10" name=" " value="IBS"> IBS<br>
+                <input type="checkbox" id="pop11" name=" " value="YRI"> YRI<br>
+                <input type="checkbox" id="pop12" name=" " value="LWK"> LWK<br>
+                <input type="checkbox" id="pop13" name=" " value="MSL"> MSL<br>
+                </div>
+                <div style="float: right;">
+                <input type="checkbox" id="pop14" name=" " value="GWD"> GWD<br>
+                <input type="checkbox" id="pop15" name=" " value="ESN"> ESN<br>
+                <input type="checkbox" id="pop16" name=" " value="ASW"> ASW<br>
+                <input type="checkbox" id="pop17" name=" " value="ACB"> ACB<br>
+                <input type="checkbox" id="pop18" name=" " value="MXL"> MXL<br>
+                <input type="checkbox" id="pop19" name=" " value="PUR"> PUR<br>
+                <input type="checkbox" id="pop20" name=" " value="CLM"> CLM<br>
+                <input type="checkbox" id="pop21" name=" " value="PEL"> PEL<br>
+                <input type="checkbox" id="pop22" name=" " value="GIH"> GIH<br>
+                <input type="checkbox" id="pop23" name=" " value="PJL"> PJL<br>
+                <input type="checkbox" id="pop24" name=" " value="BEB"> BEB<br>
+                <input type="checkbox" id="pop25" name=" " value="STU"> STU<br>
+                <input type="checkbox" id="pop26" name=" " value="ITU"> ITU<br>
+                </div>
+              </div>
+              </td>
+              <td> &ensp; </td>
+              <!--<td> <hr style="width: 1px; height: 50px; background: grey; border: none;" /> </td>-->
+              <td> &ensp;  Genotype: &ensp; </td>
+              <td>
+                <select name="-g" onchange="fun()" id="dropDown2">
+                  <option>Count</option>
+                  <option>Percent</option>
+                  <option>MAF</option>
+                </select> &ensp; </td>
+              <td>
+                <div id="Fun" style="display:inline">
+                  <input type="checkbox" id="gen1" name=" " value="Homozygous Reference"> Homozygous Reference<br>
+                  <input type="checkbox" id="gen2" name=" " value="Heterozygous"> Heterozygous<br>
+                  <input type="checkbox" id="gen3" name=" " value="Homozygous Alternate"> Homozygous Alternate<br>
+                </div>
+              </td>
+              <td>
+                <select name=" " id="dropDown3">
+                  <option>></option>
+                  <option>>=</option>
+                  <option>==</option>
+                  <option><=</option>
+                  <option><</option>
+                </select> &ensp; </td>
+              <td>
+              <td>
+                <input id = 'num' name=" " type="text" style="width: 100px;">
+              <td>
+  
+           </tr>
+           </div>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td> <input type="button" onclick="cloneRow()" value="Add Row" /></td>
+              <td> &ensp; &ensp;<input type="button" value="Submit" onclick="checkForTheCondition();"><br></td>
+            </tr>
+          </tfoot>
+        </table>
+      <input type="checkbox" id="-c" name=" " value="-c"> Only show number of matches<br>
+      </div>
+    </form>
+</body>
+{% endblock content %}
+</html>

@@ -1,75 +1,40 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
  <head>
+    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap.css') }}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='template.css') }}">
  </head>
- <body> 
+ <body>
    <header class="site-header">
-        <nav class="navbar navbar-expand-md navbar-dark bg-steel  fixed-top">
-         <a class="navbar-brand mr-4" href="/">Data Visualization App</a>         
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-           <span class="navbar-toggler-icon"></span> 
-          </button> 
-          
-          <div class="collapse navbar-collapse" id="navbarNavDropdown">
-              <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="/source/list" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Data
-                  </a>
-                  <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id = "dataDropdown">
-              
-                  </div>
-                </li>
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="/source/list" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Dashboards
-                  </a>
-                  <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id = "dashboardDropdown">
-              
-                  </div>
-                </li>
-              </ul>
-
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+         <a class="navbar-brand mr-4" href="/">GQT</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="/about">About</a>
+              <a class="nav-item nav-link" href="/query">Query</a>
+            </div>
+          </div>
         </div>
       </nav>
    </header>
-   <main role="main" class="container" style="max-width: 95%;">
+   <main role="main" class="container">
           {% block content %}{% endblock content %}
    </main>
-
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
  </body>
- <script type="text/javascript">
-  var data = JSON.parse('{{ args | tojson | safe}}');
-  var fileHtml = "";
-  graphHtml = "";
-  var str = "";
-  var item;
-
-  for (item of data.files) {
-
-    fileHtml += '<a class=\"dropdown-item\">' + item + '</a>\n';
-    graphHtml += '<a class=\"dropdown-item\" href=\"/dashboard/' + item + '\" onclick=\"dataClicked()\">' + item + '</a>\n';
-
-  }
-  fileHtml += '<li class=\"dropdown-divider\"></li>';
-  fileHtml += '<a class=\"dropdown-item\" href=\"/upload\"> + New</a>';
-
-  document.getElementById("dataDropdown").innerHTML = fileHtml;
-  document.getElementById("dashboardDropdown").innerHTML = graphHtml;
-
-
-
-  function dataClicked() {
-    
-  }
-</script>
 </html>
