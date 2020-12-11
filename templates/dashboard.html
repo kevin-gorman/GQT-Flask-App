@@ -1,0 +1,712 @@
+
+
+<!DOCTYPE html>
+<html>
+{% extends "template.html" %}
+{% block content %}
+
+<body>
+    <div class="inner">
+        <div class="title" >
+            <div class='row' id='rowTemplate'>
+                <h2 style="text-align: center; margin-left: auto; margin-right: auto; ">Dashboard</h2>
+            </div>
+        </div>
+        <div id="dashboard" style="display:none;">
+            <div class='row' style="margin-top: 10px; padding-bottom: 15px; border-bottom: 1px solid #cfd8dc;">
+                <div style="margin-left: auto; margin-right: auto;">
+                    <div class="span6" id='gender'>
+                        <h4>
+                            Gender
+                        </h4>
+                    </div>
+                        
+                    <div class="span6" id='race'>
+                        <h4>
+                            Race
+                        </h4>
+                    </div>
+
+                    <div class="span6" id='ethnicity'>
+                        <h4>
+                            Ethnicity
+                        </h4>
+                    </div>
+                    <div class="span6" id='religion'>
+                        <h4>
+                            Religion
+                        </h4>
+                    </div>
+                    <div class="span6"id='status'>
+                        <h4>
+                            Status
+                        </h4>
+                    </div>
+                    <div class="span6" id='age'>
+                        <h4>
+                            Age
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        
+            <div class='row' style="margin-top: 10px;">
+                <div style="margin-left: auto; margin-right: auto;">
+                    <div class='span1' id='eventType'>
+                        <h4>
+                        Encounter Event Types (Total Count)
+
+                        </h4>
+                    </div>
+                    <div class='span1' id='virtual'>
+                        <h4>
+                        Encounter Event Type Categories (Total Count)
+                        </h4>
+                    </div>   
+                    <div class='span2' id='eventTypeTime'>
+                        <h4>
+                            Count of Encounter Event Type Per Day
+                        </h4>
+                    </div>
+                </div>
+                
+            </div>
+            <div class='row' style="margin-top: 10px;">
+                <div style="margin-left: auto; margin-right: auto;">
+                    <div class='span2' id='completedTime'>
+                        <h4>
+                            Completed and Missed Per Day
+
+                        </h4>
+                    </div>
+                    <div class='span2' id='virtualTime'>
+                        <h4>
+                            Aggregated Types Per Day
+
+                        </h4>
+                    </div>
+        
+                </div>
+            </div>
+            <div class='row'>
+                <div style="margin-left: auto; margin-right: auto; padding-bottom: 25px; ">
+                    <div class='span4' id='underChart'>
+                        <h5 style="border-top: 1px dotted #cfd8dc; margin-left: auto; margin-right: auto; text-align: center;">
+                            use this chart to filter the time range
+                        </h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class='row' style="auto; border-top: 2px solid #cfd8dce7;">
+                <div style="margin-left: auto; margin-right: auto;">
+                    <h5 style="margin-left: auto; margin-right: auto; text-align: center;">
+                        Eventflow
+                    </h5>
+                    <div class='span4' id='root'></div>
+                </div>
+            </div>
+
+        </div>
+        <div id="loading">
+            <h5 style=" margin-left: auto; margin-right: auto; text-align: center;">
+                The dashboard is loading. This should take less than a minute.
+            </h5>
+        </div>
+    </div>
+</body>
+
+<style>
+    
+    body {
+      font-family: Helvetica Neue, Helvetica-Neue, Helvetica;
+    }
+    
+    .chart {
+      float: left;
+    }
+    
+    .button-area {
+      padding: 40px 0 0 30px;
+      float: left;
+    }
+    
+    .app-button {
+      display: block;
+      margin-bottom: 3px;
+    }
+    
+    .axis text {
+      font-size: 0.8em;
+    }
+    
+    .axis line {
+      stroke: #000;
+    }
+    
+    .axis path {
+      display: none;
+    }
+         
+    .line {
+      /* stroke: orange;  */
+      fill: none;
+      stroke-width: 3px;
+    } 
+    /*     
+    .overlay {
+      fill: none;
+      pointer-events: all;
+    } */
+    
+    
+    .tooltip {
+      position: absolute;
+      padding: 10px;
+      font: 12px sans-serif;
+      background: #222;
+      color: #fff;
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+      opacity: 0.9;
+      visibility: hidden;
+    }
+    
+</style>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='lib/dc.css') }}"></script>
+
+
+<script type="text/javascript" src="{{ url_for('static', filename='lib/d3.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='lib/dc.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='lib/crossfilter.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='dist/bundle.js') }}"></script>
+
+<script>
+
+    // Wraps the text of text_orig in chart chart_id to fit the specified width
+    function wrap(text_orig, width, chart_id) {
+        Array.prototype.forEach.call(text_orig._groups[0], function (x) {
+            var text = d3.select(x)
+            var all_tspans = text.selectAll('tspan').size()
+            if(all_tspans > 1){
+                return;
+            }
+
+            var  words = text.text().split(/\s+/).reverse();
+            var  word;
+            var  lineNumber = 0;
+            var  lineHeight = 1.1;
+            var  y = text.attr("y");
+            var  dy = parseFloat(text.attr("dy"));
+            var  tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+
+            while (word = words.pop()) {
+                // If a word is less than 7 chars, fine
+                if (word.length <= 7) {
+                    tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", lineNumber * lineHeight + dy + "em").text(word);
+                    ++lineNumber;
+                }
+                // Otherwise split into multiple lines
+                else {
+                    word1 = word.substring(0,7);
+                    word2 = word.substring(7,word.length);
+                    tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", lineNumber * lineHeight + dy + "em").text(word1);
+                    ++lineNumber;
+                    tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", lineNumber * lineHeight + dy + "em").text(word2);
+                    ++lineNumber;
+
+                }
+
+            }
+
+        });
+    }
+
+    // Given an age, return the corresponding age group
+    function findAgeGroup(age) {
+        if (age <= 10){
+            ageGroup = '0-10';
+        } else if (age > 10 && age <= 20 ){
+            ageGroup = '10-20';
+        } else if (age > 20 && age <= 30 ){
+            ageGroup = '20-30';
+        } else if (age > 30 && age <= 40 ){
+            ageGroup = '30-40';
+        } else if (age > 40 && age <= 50 ){
+            ageGroup = '40-50';
+        } else if (age > 50 && age <= 60 ){
+            ageGroup = '50-60';
+        } else if (age > 60 && age <= 70 ){
+            ageGroup = '60-70';
+        } else if (age > 70 && age <= 80 ){
+            ageGroup = '70-80';
+        } else if (age > 80 && age <= 90 ){
+            ageGroup = '80-90';
+        } else if (age > 90 && age <= 100 ){
+            ageGroup = '90-100';
+        }
+        return ageGroup
+    }
+
+    // Get the path to the files for the selected dashboard and open them
+    var args = JSON.parse('{{ args | tojson | safe}}');
+    var path = "/static/" + args.displaydash;
+    var eventTypeChart = dc.barChart("#eventType");
+    d3.dsv(",", path + "/demographics.txt").then(function(demographics){
+        d3.dsv("|", path + "/events.txt").then(function(data){
+
+            // Overall usable width, use for sizing charts
+            var width = document.getElementById('rowTemplate').offsetWidth;
+            
+            // Map for relating a person to their demographics
+            var demographicsMap = new Map();
+            var demKeys = d3.keys(demographics[0]);
+
+            var GUID = "";
+            
+            // Build demographicsMap
+            demographics.forEach(d => {
+                var newD = new Map();
+                d.Age = findAgeGroup(d.Age);
+                demKeys.forEach(key => {
+                    if (key == "GUID") {
+                        GUID = d[key];
+                    }
+                    else {
+                        newD[key] = d[key];
+                    }
+                });
+                demographicsMap[GUID] = newD;
+            });
+            
+            
+            var formatDate = d3.timeParse("%Y-%m-%d");
+
+            // Holds reformatted data
+            var adjustedData = []; 
+    
+            var count = 0;
+            for (i = 0; i < data.length; i++) {
+                var d = data[i];
+            
+                // Convert string date to a d3 date 
+                d.StartTime = formatDate(d.StartTime.substring(0, 10));
+
+                // Add completed value for if it is completed or missed
+                d.Completed = (d.EventAttributes.includes("Completed") ? 'Completed' : 'Missed');
+
+                // If "Policy Active" or "Visit Encounter", do not add this event
+                if (d.EventCategory.includes("Pol") || d.EventCategory.includes("Enco")) {
+                    continue;
+                }
+                
+                // If "Video Visit" it is Synchronous Telehealth
+                if (d.EventCategory.includes("Vid")) {
+                    d.Virtual = "Synchronous Telehealth";
+                }
+                // If "Message" it is Asynchronous Telehealth
+                else if (d.EventCategory.includes("Mes")) {
+                    d.Virtual = "Asynchronous Telehealth";
+                }
+                // All others are In-Person
+                else {
+                    d.Virtual = "In-Person";
+                    d.EventCategory = (d.EventCategory.includes("Hom") ? 'Home Visit' : d.EventCategory);
+                }
+                // Append the demographics to these adjusted values, then add that to adjustedData
+                adjustedData[count] = Object.assign({}, d, demographicsMap[d.GUID]);
+                count += 1;
+            }
+            data = adjustedData;
+            var ndx = crossfilter(data); // Make crossfilter for data
+            var all = ndx.groupAll();
+
+            
+            // Make the dimensions of the dataset
+            var idDim = ndx.dimension(function (d) { return d["GUID"]; });
+            
+            var eventTypeDim = ndx.dimension(function (d) { return d["EventCategory"]; });
+            
+            var virtualDim = ndx.dimension(function (d) { return d.Virtual; });
+            var dateDim = ndx.dimension(function (d) { return d.StartTime; });
+            var serieseventTypeDim = ndx.dimension(function (d) { return [d["EventCategory"], d.StartTime]; });
+            var seriesCompletedDim = ndx.dimension(function (d) { return [d.Completed, d.StartTime]; });
+            var seriesVirtualDim = ndx.dimension(function (d) { return [d.Virtual, d.StartTime]; });
+              
+            // Group the dimensions, adding 1 to the totals for each day for every instance seen for that day
+            var runGroup = serieseventTypeDim.group().reduceSum(function(d) { return 1; });
+            var completedGroup = seriesCompletedDim.group().reduceSum(function(d) { return 1; });
+            var seriesVirtualGroup = seriesVirtualDim.group().reduceSum(function(d) { return 1; });
+            var dateGroup = dateDim.group();
+
+            const fullDomain = d3.extent(data, function(d){ return d.StartTime; });
+            const cutOffFirstDate = [d3.timeDay.offset(fullDomain[0], 1), fullDomain[1]];
+            
+        
+            // Special group where it has seperate components for completed or missed
+            var eventTypeGroup = eventTypeDim.group().reduce((p, v) => {
+                        p[v.Completed] = (p[v.Completed] || 0) + 1;
+                        return p;
+                    }, (p, v) => {
+                        p[v.Completed] = (p[v.Completed] || 0) - 1;
+                        return p;
+                    }, () => ({}));
+
+            // Make event type bar chart with completed and missed stacked
+            eventTypeChart
+                .width(width/5)
+                .height(250)
+                .dimension(eventTypeDim)
+                
+                .group(eventTypeGroup, 'Completed', function (d) {return d.value.Completed; })
+                .gap(10)
+                .brushOn(true)
+                .xUnits(dc.units.ordinal)
+                .elasticY(true)
+                .margins({top: 10, right: 10, bottom: 50, left: 40})
+                .legend(dc.legend().x(500).y(10).gap(5))
+                .keyAccessor(function(d) {return d.key;})
+
+                .x(d3.scaleBand());
+                
+            eventTypeChart.stack(eventTypeGroup, 'Missed', function (d) {return d.value.Missed; });
+            eventTypeChart.renderlet(function(chart){
+                chart.selectAll("g.x text")
+                    .call(wrap, 1, chart); // Wraps long text
+
+            });
+
+            // Special group where it has seperate components for completed or missed
+            var virtualGroup = virtualDim.group().reduce((p, v) => {
+                        p[v.Completed] = (p[v.Completed] || 0) + 1;
+                        return p;
+                    }, (p, v) => {
+                        p[v.Completed] = (p[v.Completed] || 0) - 1;
+                        return p;
+                    }, () => ({}));
+
+            // Make aggregated event type bar chart with completed and missed stacked
+            var virtualChart = dc.barChart("#virtual");
+            virtualChart
+                .width(width/5)
+                .height(250)
+                .dimension(virtualDim)
+                .group(virtualGroup, 'Completed', function (d) {return d.value.Completed; })
+                .gap(10)
+                .brushOn(true)
+                .xUnits(dc.units.ordinal)
+                .elasticY(true)
+                .margins({top: 10, right: 10, bottom: 50, left: 45})
+                .legend(dc.legend().x(width/5 - 100).y(10).gap(5))
+                .keyAccessor(function(d) {return d.key;})
+
+                .x(d3.scaleBand());
+                
+            virtualChart.stack(virtualGroup, 'Missed', function (d) {return d.value.Missed; });
+
+            // Make the time series event type chart, and the filter chart which is the same data but with filtering abilities
+            var eventTypeTimeChart = dc.seriesChart("#eventTypeTime");
+            var underChart = dc.seriesChart("#underChart");
+        
+            eventTypeTimeChart
+                .width(2*width/5)
+                .height(250)
+                .dimension(serieseventTypeDim)
+                .group(runGroup)
+
+                .brushOn(false)
+                .x(d3.scaleTime().domain(cutOffFirstDate))
+                .xUnits(d3.timeDay)
+                .rangeChart(underChart)
+                
+                
+                .chart(function(c) { return new dc.LineChart(c).curve(d3.curveCardinal)
+                    .filterHandler(function(dimension, filter) {
+                        if (filter[0]) {
+                        dimension.filterFunction(function(d) {
+                            return d[1] > filter[0][0] && d[1] < filter[0][1];
+                        });
+                        } else {
+                        dimension.filterAll();
+                        }
+                        setTimeout(dc.redrawAll, 0);
+                        return filter;
+                    }); 
+                })
+
+
+                .seriesAccessor(function(d) {return d.key[0];})
+                .keyAccessor(function(d) {return d.key[1];})
+                .valueAccessor(function(d) {return d.value;})          
+                
+                .margins({top: 10, right: 100, bottom: 50, left: 40})
+                .legend(dc.legend().x(2*width/5 - 100).y(10).gap(5))
+
+            // Allows y and x domains to be changed if not all the data is selected.
+            // This is the main work around for not displaying the first day of data by
+            // having a normal domain of cutOffFirstDate when not filtered
+            eventTypeTimeChart.elasticX = function() {
+                return arguments.length ? this : false;
+            };
+            eventTypeTimeChart.elasticY = function() {
+                return arguments.length < data.length - 1 ? this : false;
+            };
+            eventTypeTimeChart
+                .xAxis().ticks(8).tickFormat(d3.timeFormat("%m/%d/%y"));
+
+            // Special group where it has seperate components for completed or missed
+            var seriesEventTypeGroup = serieseventTypeDim.group().reduce((p, v) => {
+                        p[v.Completed] = (p[v.Completed] || 0) + 1;
+                        return p;
+                    }, (p, v) => {
+                        p[v.Completed] = (p[v.Completed] || 0) - 1;
+                        return p;
+                    }, () => ({}));
+
+            // brushOn(true) allows this chart to filter the others
+            underChart
+                .width(4*width/5)
+                .height(150)
+                .dimension(serieseventTypeDim)
+                .group(runGroup)
+                .x(d3.scaleTime().domain(cutOffFirstDate))
+                .elasticY(true)
+                .xUnits(dc.units.integers)
+            
+                .brushOn(true)
+                .chart(function(c) { return new dc.LineChart(c).curve(d3.curveCardinal).evadeDomainFilter(true); })
+                .seriesAccessor(function(d) {return d.key[0];})
+                .margins({top: 10, right: 50, bottom: 50, left: 40})
+                
+                .valueAccessor(function(d) {return d.value;})
+                .renderHorizontalGridLines(true)
+                .keyAccessor(function(d) {return d.key[1];})
+            
+            underChart.yAxis().ticks(6);
+
+            underChart
+                .xAxis().ticks(12).tickFormat(d3.timeFormat("%m/%d/%y"));
+
+            underChart.renderlet(function(chart){
+                chart.svg().style({fill: 'lightgrey'});
+            });
+
+            
+
+            underChart.yAxisPadding(10);
+
+            
+            var completedTimeChart = dc.seriesChart("#completedTime");
+
+            // This fixed the problem of it displaying bins of 0 before and after the filtered data
+            function remove_empty_bins(source_group) {
+                return {
+                    all:function () {
+                        return source_group.all().filter(function(d) {
+                            return d.value != 0;
+                        });
+                    }
+                };
+            }
+            var filteredCompletedGroup = remove_empty_bins(completedGroup);
+            var fullCompletedBinsLen = completedGroup.all().length;
+            
+          
+            // Make the completed/missed time series chart
+            completedTimeChart
+                .width(2*width/5)
+                .height(250)
+                .dimension(seriesCompletedDim)
+                .group(filteredCompletedGroup)
+                .brushOn(false)
+                .x(d3.scaleTime().domain(cutOffFirstDate))
+                .xUnits(d3.timeDay)
+
+                .chart(function(c) { return new dc.LineChart(c).curve(d3.curveCardinal)})
+
+
+                .seriesAccessor(function(d) {return d.key[0];})
+                .keyAccessor(function(d) {return d.key[1];})
+                .valueAccessor(function(d) {return d.value;})
+                .elasticY(true)
+
+                .margins({top: 10, right: 50, bottom: 50, left: 40})
+                .legend(dc.legend().x(2*width/5 - 100).y(10).gap(5))
+               
+            // Allows x domain to be changed if not all the data is selected.
+            // This is the main work around for not displaying the first day of data by
+            // having a normal domain of cutOffFirstDate when not filtered
+            completedTimeChart.elasticX = function() {
+                if (filteredCompletedGroup.all().length < fullCompletedBinsLen) {
+                    return true;
+                }
+                completedTimeChart.x(d3.scaleTime().domain(cutOffFirstDate))
+                return false;
+            };
+            completedTimeChart
+                .xAxis().ticks(8).tickFormat(d3.timeFormat("%m/%d/%y"));
+        
+            completedTimeChart.renderlet(function(chart){
+                chart.selectAll("g.x text").attr('dx', '-10');
+            });
+
+            // This fixed the problem of it displaying bins of 0 before and after the filtered data
+            var filteredVirtualGroup = remove_empty_bins(seriesVirtualGroup);
+
+            // Make the completed/missed time series chart
+            var virtualTimeChart = dc.seriesChart("#virtualTime");
+            virtualTimeChart
+                .width(2*width/5)
+                .height(250)
+                .dimension(seriesVirtualDim)
+                .group(filteredVirtualGroup)
+                .brushOn(false)
+                .x(d3.scaleTime().domain(cutOffFirstDate))
+                .elasticY(true)
+                .y(d3.scaleLinear().domain([0,+seriesVirtualGroup.top(2)[1].value]))
+                .xUnits(d3.timeDay)
+                
+                .chart(function(c) { return new dc.LineChart(c).curve(d3.curveCardinal)
+                    .filterHandler(function(dimension, filter) {
+                        if (filter[0]) {
+                        dimension.filterFunction(function(d) {
+                            return d[1] > filter[0][0] && d[1] < filter[0][1];
+                        });
+                        } else {
+                        dimension.filterAll();
+                        }
+                        setTimeout(dc.redrawAll, 0);
+                        return filter;
+                    }); 
+                })
+
+
+                .seriesAccessor(function(d) {return d.key[0];})
+                .keyAccessor(function(d) {return d.key[1];})
+                .valueAccessor(function(d) {return d.value;})
+                
+                .margins({top: 10, right: 50, bottom: 50, left: 40})
+                .legend(dc.legend().x(2*width/5 - 150).y(10).gap(5))
+
+            // Allows x domain to be changed if not all the data is selected.
+            // This is the main work around for not displaying the first day of data by
+            // having a normal domain of cutOffFirstDate when not filtered
+            var fullVirtualBinsLen = seriesVirtualGroup.all().length;
+            virtualTimeChart.elasticX = function() {
+                if (filteredVirtualGroup.all().length < fullVirtualBinsLen) {
+                    return true;
+                }
+                virtualTimeChart.x(d3.scaleTime().domain(cutOffFirstDate))
+                return false;
+            };
+
+        
+            virtualTimeChart
+                .xAxis().ticks(8).tickFormat(d3.timeFormat("%m/%d/%y"));
+            virtualTimeChart.renderlet(function(chart){
+                chart.selectAll("g.x text").attr('dx', '-10');
+            });
+
+            
+            
+            
+            // Make the demographics dimensions and groups by
+            // adding 1 to the totals for each day for every instance seen for that day
+            var genderDim = ndx.dimension(function (d) { return d.Gender; }); 
+            var genderGroup = genderDim.group().reduceCount(function(d) { return 1; });
+
+            var raceDim = ndx.dimension(function (d) { return d.Race; }); 
+            var raceGroup = raceDim.group().reduceSum(function(d) { return 1; });
+        
+            var ethnicityDim = ndx.dimension(function (d) { return d.Ethnicity; }); 
+            var ethnicityGroup = ethnicityDim.group().reduceSum(function(d) { return 1; });
+
+            var statusDim = ndx.dimension(function (d) { return d.Status; }); 
+            var statusGroup = statusDim.group().reduceSum(function(d) { return 1; });
+
+            var religionDim = ndx.dimension(function (d) { return d.Religion; }); 
+            var religionGroup = religionDim.group().reduceSum(function(d) { return 1; });
+
+            var ageDim = ndx.dimension(function (d) { return d.Age; }); 
+            var ageGroup = ageDim.group().reduceSum(function(d) { return 1; });
+
+    
+            // Make the demographics charts
+            var genderMenu = dc.selectMenu("#gender")
+                .dimension(genderDim)
+                .group(genderGroup)
+                .multiple(true)
+                .controlsUseVisibility(true)
+                .title(function (d){
+                    return d.key;
+                })   
+
+            var raceMenu = dc.selectMenu("#race")
+                .dimension(raceDim)
+                .group(raceGroup)
+                .multiple(true)
+                .controlsUseVisibility(true)
+                .title(function (d){
+                    return d.key;
+                })  
+            
+            var raceMenu = dc.selectMenu("#ethnicity")
+                .dimension(ethnicityDim)
+                .group(ethnicityGroup)
+                .multiple(true)
+                .controlsUseVisibility(true)
+                .title(function (d){
+                    return d.key;
+                })  
+            
+        
+            var statusMenu = dc.selectMenu("#status")
+                .dimension(statusDim)
+                .group(statusGroup)
+                .multiple(true)
+                .controlsUseVisibility(true)
+                .title(function (d){
+                    return d.key;
+                })  
+            
+            var religionMenu = dc.selectMenu("#religion")
+                .dimension(religionDim)
+                .group(religionGroup)
+                .multiple(true)
+                .controlsUseVisibility(true)
+                .title(function (d){
+                    return d.key;
+                }) 
+                
+            var age = dc.selectMenu("#age")
+                .dimension(ageDim)
+                .group(ageGroup)
+                .multiple(true)
+                .controlsUseVisibility(true)
+                .title(function (d){
+                    return d.key;
+                })  
+            
+            // Render charts
+            dc.renderAll();
+            // This calls the renderlet functions which sytels and filters the domains
+            dc.redrawAll(); 
+
+            // Turn loading screen off and dashboard on
+            document.getElementById("loading").setAttribute("style","display:none");
+            document.getElementById("dashboard").setAttribute("style","display:in-line");
+
+
+            
+
+        });
+    });
+    
+</script>
+
+
+{% endblock content %}
+
+
+</html>
